@@ -1,0 +1,130 @@
+# Traefik Dynamic Configuration — OntDekker Local Development
+#
+# Routing contract (team_guidelines.md — /api/v1/{service-name}/* standard):
+#
+#   Authentication Service
+#     External:  http://localhost/api/v1/authentication/*
+#     Stripped:  /api/v1/authentication
+#     Internal:  http://authentication-service:8000/auth/*
+#     (FastAPI router mounted at prefix="/auth")
+#
+#   User Service
+#     External:  http://localhost/api/v1/user/*
+#     Stripped:  /api/v1/user
+#     Internal:  http://user-service:8000/users/*
+#     (FastAPI router mounted at prefix="/users")
+#
+#   Feed Service
+#     External:  http://localhost/api/v1/feed/*
+#     Stripped:  (none — internal prefix matches external prefix)
+#     Internal:  http://feed-service:8000/api/v1/feed/*
+#     (FastAPI routers each declare prefix="/api/v1/feed")
+#
+#   Community Service
+#     External:  http://localhost/api/v1/communities/*
+#     Stripped:  (none — internal prefix matches external prefix)
+#     Internal:  http://community-service:8000/api/v1/communities/*
+#     (FastAPI router registered with prefix="/api/v1/communities" in main.py)
+#
+# Container hostnames resolve via Docker Compose's internal DNS
+# (services share the default Compose network with Traefik).
+
+http:
+
+  # ── Routers ───────────────────────────────────────────────────────────────
+  routers:
+
+    auth-service:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api/v1/authentication`)"
+      middlewares:
+        - auth-strip
+      service: auth-service
+
+    user-service:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api/v1/user`)"
+      middlewares:
+        - user-strip
+      service: user-service
+
+    feed-service:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api/v1/feed`)"
+      service: feed-service
+
+    community-service:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api/v1/communities`)"
+      service: community-service
+
+    expedition-service-legacy:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/expeditions/api`)"
+      service: expedition-service
+
+    expedition-service-trips:
+      entryPoints:
+        - web
+      rule: "PathPrefix(`/api/v1/trips`)"
+      service: expedition-service
+
+    expedition-service-mytrips:
+      entryPoints:
+        - web
+      rule: "Path(`/api/v1/users/me/trips`)"
+      service: expedition-service
+
+  # ── Middlewares ────────────────────────────────────────────────────────────
+  middlewares:
+
+    auth-strip:
+      stripPrefix:
+        prefixes:
+          - "/api/v1/authentication"
+
+    user-strip:
+      stripPrefix:
+        prefixes:
+          - "/api/v1/user"
+
+  # ── Services ──────────────────────────────────────────────────────────────
+  services:
+
+    auth-service:
+      loadBalancer:
+        servers:
+          # Traefik reaches authentication-service over the shared Compose network.
+          # Port 8000 is the uvicorn port declared in the service's Dockerfile CMD.
+          - url: "http://authentication-service:8000"
+
+    user-service:
+      loadBalancer:
+        servers:
+          # Traefik reaches user-service over the shared Compose network.
+          # Port 8000 is the uvicorn port declared in the service's Dockerfile CMD.
+          - url: "http://user-service:8000"
+
+    feed-service:
+      loadBalancer:
+        servers:
+          # Traefik reaches feed-service over the shared Compose network.
+          # Port 8000 is the uvicorn port declared in the service's Dockerfile CMD.
+          - url: "http://feed-service:8000"
+
+    community-service:
+      loadBalancer:
+        servers:
+          # Traefik reaches community-service over the shared Compose network.
+          # Port 8000 is the uvicorn port declared in the service's Dockerfile CMD.
+          - url: "http://community-service:8000"
+
+    expedition-service:
+      loadBalancer:
+        servers:
+          - url: "http://expedition-service:8000"

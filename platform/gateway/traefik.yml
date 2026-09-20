@@ -1,0 +1,34 @@
+# Traefik Static Configuration — OntDekker Local Development
+#
+# This file is the Traefik entry-point configuration.
+# Dynamic routing rules live in dynamic.yml (file provider).
+#
+# Architecture (team_guidelines.md — /api/v1/{service-name}/* standard):
+#   Internet → Traefik :80 → strip prefix → microservice container :8000
+#
+# Note: Docker provider is NOT used here because Docker Desktop on macOS
+# does not reliably expose the Docker socket inside containers (the bind-
+# mounted socket cannot be connected to from within the VM). The file
+# provider is the portable alternative for local development.
+
+# Entry points ---------------------------------------------------------------
+entryPoints:
+  web:
+    address: ":80"
+
+# Providers ------------------------------------------------------------------
+providers:
+  # File provider watches dynamic.yml for router/service/middleware definitions.
+  # watch: true enables hot-reload when dynamic.yml changes (no restart needed).
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+
+# API / Dashboard (read-only, development only) ------------------------------
+api:
+  dashboard: false
+  insecure: false
+
+# Logging --------------------------------------------------------------------
+log:
+  level: INFO

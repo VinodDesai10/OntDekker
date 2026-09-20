@@ -1,0 +1,1 @@
+# Platform gateway configuration\n

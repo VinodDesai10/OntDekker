@@ -1,0 +1,1 @@
+# OntDekker Makefile\n\nrun:\n\tdocker compose up --build\n

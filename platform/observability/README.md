@@ -1,0 +1,1 @@
+# Platform observability configuration\n
